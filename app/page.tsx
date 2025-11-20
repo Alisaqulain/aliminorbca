@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
-import { Train, Clock, Shield, Ticket, ArrowRight, MapPin } from 'lucide-react'
+import { Train, Clock, Shield, Ticket, ArrowRight, MapPin, Star, Users, TrendingUp, Sparkles, CheckCircle, Zap, Globe } from 'lucide-react'
 import { useEffect, useRef } from 'react'
 import * as THREE from 'three'
 
@@ -86,53 +86,84 @@ export default function HomePage() {
 
   const features = [
     {
-      icon: Train,
-      title: 'Fast Booking',
-      description: 'Book your tickets in seconds with our streamlined process',
-    },
-    {
-      icon: Clock,
-      title: 'Real-time Updates',
-      description: 'Get instant notifications about your journey status',
+      icon: Zap,
+      title: 'Lightning Fast',
+      description: 'Book tickets in under 30 seconds with our optimized booking system',
+      color: 'from-yellow-400 to-orange-500',
     },
     {
       icon: Shield,
-      title: 'Secure Payment',
-      description: 'Your transactions are protected with bank-level security',
+      title: 'Bank-Level Security',
+      description: 'Your data and payments are protected with enterprise-grade encryption',
+      color: 'from-green-400 to-emerald-500',
     },
     {
-      icon: Ticket,
-      title: 'Easy Management',
-      description: 'Manage all your bookings from one convenient dashboard',
+      icon: Sparkles,
+      title: 'AI-Powered',
+      description: 'Smart recommendations and predictive search for the best travel experience',
+      color: 'from-purple-400 to-pink-500',
+    },
+    {
+      icon: Globe,
+      title: '24/7 Support',
+      description: 'Round-the-clock customer service to assist you anytime, anywhere',
+      color: 'from-blue-400 to-cyan-500',
     },
   ]
 
+  const stats = [
+    { value: '2.5M+', label: 'Happy Travelers', icon: Users },
+    { value: '50K+', label: 'Daily Bookings', icon: Ticket },
+    { value: '99.9%', label: 'Uptime', icon: TrendingUp },
+    { value: '4.9/5', label: 'User Rating', icon: Star },
+  ]
+
+  const benefits = [
+    'Instant booking confirmation',
+    'Real-time train tracking',
+    'Easy cancellation & refunds',
+    'Multiple payment options',
+    'Mobile-friendly interface',
+    'AI-powered recommendations',
+  ]
+
   return (
-    <div className="min-h-screen overflow-hidden">
+    <div className="min-h-screen overflow-hidden bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900">
       {/* Animated Background Canvas */}
       <canvas
         ref={canvasRef}
-        className="fixed inset-0 w-full h-full -z-10 opacity-20"
+        className="fixed inset-0 w-full h-full -z-10 opacity-10"
       />
 
+      {/* Animated Gradient Orbs */}
+      <div className="fixed inset-0 -z-10 overflow-hidden">
+        <div className="absolute -top-40 -right-40 w-96 h-96 bg-blue-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob"></div>
+        <div className="absolute -bottom-40 -left-40 w-96 h-96 bg-purple-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-2000"></div>
+        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-indigo-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-4000"></div>
+      </div>
+
       {/* Navigation */}
-      <nav className="fixed top-0 w-full z-50 glass border-b border-white/20">
+      <nav className="fixed top-0 w-full z-50 backdrop-blur-xl bg-white/5 border-b border-white/10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
+          <div className="flex justify-between items-center h-20">
             <motion.div
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
-              className="flex items-center space-x-2"
+              className="flex items-center space-x-3"
             >
-              <Train className="w-8 h-8 text-blue-600" />
-              <span className="text-2xl font-bold gradient-text">RailWay</span>
+              <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg">
+                <Train className="w-7 h-7 text-white" />
+              </div>
+              <span className="text-3xl font-bold bg-gradient-to-r from-blue-400 via-purple-400 to-indigo-400 bg-clip-text text-transparent">
+                RailWay
+              </span>
             </motion.div>
             <div className="flex items-center space-x-4">
               <motion.button
                 onClick={() => router.push('/login')}
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                className="px-4 py-2 text-blue-600 font-semibold hover:text-blue-700 transition-colors"
+                className="px-6 py-2.5 text-white/90 font-semibold hover:text-white transition-colors backdrop-blur-sm bg-white/5 rounded-lg border border-white/10"
               >
                 Login
               </motion.button>
@@ -140,7 +171,7 @@ export default function HomePage() {
                 onClick={() => router.push('/signup')}
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                className="btn-primary"
+                className="px-6 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold rounded-lg shadow-lg hover:shadow-xl hover:from-blue-500 hover:to-indigo-500 transition-all"
               >
                 Sign Up
               </motion.button>
@@ -150,7 +181,7 @@ export default function HomePage() {
       </nav>
 
       {/* Hero Section */}
-      <section className="relative min-h-screen flex items-center justify-center pt-16 px-4 sm:px-6 lg:px-8">
+      <section className="relative min-h-screen flex items-center justify-center pt-20 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto text-center">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
@@ -158,32 +189,90 @@ export default function HomePage() {
             transition={{ duration: 0.8 }}
             className="space-y-8"
           >
-            <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold">
-              <span className="gradient-text">Journey</span> with
+            {/* Badge */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.2 }}
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 backdrop-blur-sm border border-white/20"
+            >
+              <Sparkles className="w-4 h-4 text-yellow-400" />
+              <span className="text-sm font-semibold text-white/90">AI-Powered Booking Platform</span>
+            </motion.div>
+
+            <motion.h1
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3 }}
+              className="text-6xl sm:text-7xl lg:text-8xl font-extrabold leading-tight"
+            >
+              <span className="bg-gradient-to-r from-blue-400 via-purple-400 to-indigo-400 bg-clip-text text-transparent">
+                Journey
+              </span>
               <br />
-              <span className="text-gray-900">Confidence</span>
-            </h1>
-            <p className="text-xl sm:text-2xl text-gray-600 max-w-3xl mx-auto">
-              Book your train tickets effortlessly. Experience the future of railway reservations.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+              <span className="text-white">with Confidence</span>
+            </motion.h1>
+            
+            <motion.p
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.4 }}
+              className="text-xl sm:text-2xl lg:text-3xl text-white/80 max-w-3xl mx-auto font-light"
+            >
+              Experience the future of railway reservations. Book your tickets effortlessly with our intelligent platform.
+            </motion.p>
+
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.5 }}
+              className="flex flex-col sm:flex-row gap-4 justify-center items-center pt-4"
+            >
               <motion.button
                 onClick={() => router.push('/signup')}
-                whileHover={{ scale: 1.05 }}
+                whileHover={{ scale: 1.05, y: -2 }}
                 whileTap={{ scale: 0.95 }}
-                className="btn-primary text-lg px-8 py-4 flex items-center gap-2"
+                className="group relative px-8 py-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-lg font-semibold rounded-xl shadow-2xl hover:shadow-blue-500/50 transition-all overflow-hidden"
               >
-                Get Started <ArrowRight className="w-5 h-5" />
+                <span className="relative z-10 flex items-center gap-2">
+                  Get Started <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                </span>
+                <div className="absolute inset-0 bg-gradient-to-r from-blue-500 to-indigo-500 opacity-0 group-hover:opacity-100 transition-opacity"></div>
               </motion.button>
               <motion.button
                 onClick={() => router.push('/login')}
-                whileHover={{ scale: 1.05 }}
+                whileHover={{ scale: 1.05, y: -2 }}
                 whileTap={{ scale: 0.95 }}
-                className="btn-secondary text-lg px-8 py-4"
+                className="px-8 py-4 bg-white/10 backdrop-blur-sm text-white text-lg font-semibold rounded-xl border-2 border-white/20 hover:bg-white/20 hover:border-white/30 transition-all"
               >
                 Book Now
               </motion.button>
-            </div>
+            </motion.div>
+
+            {/* Stats */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.6 }}
+              className="grid grid-cols-2 md:grid-cols-4 gap-6 pt-12"
+            >
+              {stats.map((stat, index) => {
+                const Icon = stat.icon
+                return (
+                  <motion.div
+                    key={stat.label}
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ delay: 0.7 + index * 0.1 }}
+                    className="backdrop-blur-sm bg-white/5 rounded-2xl p-6 border border-white/10"
+                  >
+                    <Icon className="w-8 h-8 text-blue-400 mx-auto mb-3" />
+                    <p className="text-3xl font-bold text-white mb-1">{stat.value}</p>
+                    <p className="text-sm text-white/60">{stat.label}</p>
+                  </motion.div>
+                )
+              })}
+            </motion.div>
           </motion.div>
         </div>
 
@@ -191,21 +280,21 @@ export default function HomePage() {
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ delay: 1, repeat: Infinity, repeatType: 'reverse', duration: 1.5 }}
+          transition={{ delay: 1.2, repeat: Infinity, repeatType: 'reverse', duration: 1.5 }}
           className="absolute bottom-10 left-1/2 transform -translate-x-1/2"
         >
-          <div className="w-6 h-10 border-2 border-blue-600 rounded-full flex justify-center">
+          <div className="w-6 h-10 border-2 border-white/30 rounded-full flex justify-center backdrop-blur-sm bg-white/5">
             <motion.div
               animate={{ y: [0, 12, 0] }}
               transition={{ duration: 1.5, repeat: Infinity }}
-              className="w-1.5 h-1.5 bg-blue-600 rounded-full mt-2"
+              className="w-1.5 h-1.5 bg-white rounded-full mt-2"
             />
           </div>
         </motion.div>
       </section>
 
       {/* Features Section */}
-      <section className="py-20 px-4 sm:px-6 lg:px-8 bg-white/50">
+      <section className="relative py-24 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -214,10 +303,24 @@ export default function HomePage() {
             transition={{ duration: 0.6 }}
             className="text-center mb-16"
           >
-            <h2 className="text-4xl sm:text-5xl font-bold mb-4">
-              Why Choose <span className="gradient-text">RailWay</span>?
+            <motion.span
+              initial={{ opacity: 0 }}
+              whileInView={{ opacity: 1 }}
+              viewport={{ once: true }}
+              className="inline-block px-4 py-2 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 text-blue-300 font-semibold mb-4"
+            >
+              Why Choose Us
+            </motion.span>
+            <h2 className="text-5xl sm:text-6xl font-extrabold mb-6">
+              <span className="bg-gradient-to-r from-blue-400 to-indigo-400 bg-clip-text text-transparent">
+                Powerful Features
+              </span>
+              <br />
+              <span className="text-white">for Modern Travelers</span>
             </h2>
-            <p className="text-xl text-gray-600">Everything you need for a seamless journey</p>
+            <p className="text-xl text-white/70 max-w-2xl mx-auto">
+              Everything you need for a seamless and enjoyable journey experience
+            </p>
           </motion.div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
@@ -230,14 +333,15 @@ export default function HomePage() {
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
                   transition={{ duration: 0.6, delay: index * 0.1 }}
-                  whileHover={{ y: -10, scale: 1.05 }}
-                  className="glass p-8 rounded-2xl card-hover"
+                  whileHover={{ y: -10, scale: 1.02 }}
+                  className="group relative backdrop-blur-sm bg-white/5 rounded-2xl p-8 border border-white/10 hover:border-white/20 transition-all overflow-hidden"
                 >
-                  <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center mb-6">
+                  <div className="absolute inset-0 bg-gradient-to-br from-white/0 to-white/5 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                  <div className={`relative w-16 h-16 bg-gradient-to-br ${feature.color} rounded-2xl flex items-center justify-center mb-6 shadow-lg`}>
                     <Icon className="w-8 h-8 text-white" />
                   </div>
-                  <h3 className="text-2xl font-bold mb-3 text-gray-900">{feature.title}</h3>
-                  <p className="text-gray-600">{feature.description}</p>
+                  <h3 className="text-2xl font-bold mb-3 text-white">{feature.title}</h3>
+                  <p className="text-white/70 leading-relaxed">{feature.description}</p>
                 </motion.div>
               )
             })}
@@ -245,80 +349,203 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* Benefits Section */}
+      <section className="relative py-24 px-4 sm:px-6 lg:px-8 bg-gradient-to-r from-blue-600/20 to-indigo-600/20 backdrop-blur-sm">
+        <div className="max-w-7xl mx-auto">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+            <motion.div
+              initial={{ opacity: 0, x: -50 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.8 }}
+            >
+              <span className="inline-block px-4 py-2 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 text-blue-300 font-semibold mb-4">
+                What You Get
+              </span>
+              <h2 className="text-5xl sm:text-6xl font-extrabold mb-6 text-white">
+                Everything You Need
+                <br />
+                <span className="bg-gradient-to-r from-blue-400 to-indigo-400 bg-clip-text text-transparent">
+                  In One Place
+                </span>
+              </h2>
+              <p className="text-xl text-white/80 mb-8">
+                Our platform combines cutting-edge technology with user-friendly design to deliver the best booking experience.
+              </p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {benefits.map((benefit, index) => (
+                  <motion.div
+                    key={benefit}
+                    initial={{ opacity: 0, x: -20 }}
+                    whileInView={{ opacity: 1, x: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ delay: index * 0.1 }}
+                    className="flex items-center gap-3"
+                  >
+                    <div className="w-6 h-6 bg-gradient-to-br from-green-400 to-emerald-500 rounded-full flex items-center justify-center flex-shrink-0">
+                      <CheckCircle className="w-4 h-4 text-white" />
+                    </div>
+                    <span className="text-white/90">{benefit}</span>
+                  </motion.div>
+                ))}
+              </div>
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, x: 50 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.8 }}
+              className="relative"
+            >
+              <div className="backdrop-blur-sm bg-white/5 rounded-3xl p-8 border border-white/10">
+                <div className="space-y-6">
+                  {[1, 2, 3].map((i) => (
+                    <motion.div
+                      key={i}
+                      initial={{ opacity: 0, y: 20 }}
+                      whileInView={{ opacity: 1, y: 0 }}
+                      viewport={{ once: true }}
+                      transition={{ delay: i * 0.2 }}
+                      className="backdrop-blur-sm bg-white/5 rounded-xl p-6 border border-white/10"
+                    >
+                      <div className="flex items-center gap-4">
+                        <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center">
+                          <Train className="w-6 h-6 text-white" />
+                        </div>
+                        <div>
+                          <h4 className="text-white font-semibold mb-1">Feature {i}</h4>
+                          <p className="text-white/60 text-sm">Amazing feature description</p>
+                        </div>
+                      </div>
+                    </motion.div>
+                  ))}
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        </div>
+      </section>
+
       {/* CTA Section */}
-      <section className="py-20 px-4 sm:px-6 lg:px-8 bg-gradient-to-r from-blue-600 to-indigo-600">
+      <section className="relative py-24 px-4 sm:px-6 lg:px-8">
         <div className="max-w-4xl mx-auto text-center">
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
             whileInView={{ opacity: 1, scale: 1 }}
             viewport={{ once: true }}
             transition={{ duration: 0.6 }}
-            className="space-y-8"
+            className="relative backdrop-blur-sm bg-gradient-to-r from-blue-600/30 to-indigo-600/30 rounded-3xl p-12 border border-white/20"
           >
-            <h2 className="text-4xl sm:text-5xl font-bold text-white mb-4">
-              Ready to Start Your Journey?
-            </h2>
-            <p className="text-xl text-blue-100">
-              Join thousands of satisfied travelers. Book your ticket today!
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <motion.button
-                onClick={() => router.push('/signup')}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                className="bg-white text-blue-600 px-8 py-4 rounded-lg font-semibold text-lg hover:shadow-xl transition-shadow"
-              >
-                Create Account
-              </motion.button>
-              <motion.button
-                onClick={() => router.push('/login')}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                className="bg-transparent border-2 border-white text-white px-8 py-4 rounded-lg font-semibold text-lg hover:bg-white/10 transition-colors"
-              >
-                Login
-              </motion.button>
+            <div className="absolute inset-0 bg-gradient-to-r from-blue-600/20 to-indigo-600/20 rounded-3xl blur-xl"></div>
+            <div className="relative z-10 space-y-8">
+              <h2 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-white mb-4">
+                Ready to Start Your Journey?
+              </h2>
+              <p className="text-xl text-white/80 max-w-2xl mx-auto">
+                Join millions of satisfied travelers. Book your ticket today and experience the future of railway reservations!
+              </p>
+              <div className="flex flex-col sm:flex-row gap-4 justify-center pt-4">
+                <motion.button
+                  onClick={() => router.push('/signup')}
+                  whileHover={{ scale: 1.05, y: -2 }}
+                  whileTap={{ scale: 0.95 }}
+                  className="px-8 py-4 bg-white text-blue-600 rounded-xl font-bold text-lg hover:shadow-2xl transition-all"
+                >
+                  Create Account
+                </motion.button>
+                <motion.button
+                  onClick={() => router.push('/login')}
+                  whileHover={{ scale: 1.05, y: -2 }}
+                  whileTap={{ scale: 0.95 }}
+                  className="px-8 py-4 bg-transparent border-2 border-white text-white rounded-xl font-bold text-lg hover:bg-white/10 transition-all"
+                >
+                  Login
+                </motion.button>
+              </div>
             </div>
           </motion.div>
         </div>
       </section>
 
       {/* Footer */}
-      <footer className="bg-gray-900 text-white py-12 px-4 sm:px-6 lg:px-8">
+      <footer className="relative bg-gray-900/80 backdrop-blur-sm border-t border-white/10 py-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
             <div>
-              <div className="flex items-center space-x-2 mb-4">
-                <Train className="w-8 h-8 text-blue-400" />
-                <span className="text-2xl font-bold">RailWay</span>
+              <div className="flex items-center space-x-3 mb-4">
+                <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center">
+                  <Train className="w-7 h-7 text-white" />
+                </div>
+                <span className="text-2xl font-bold bg-gradient-to-r from-blue-400 to-indigo-400 bg-clip-text text-transparent">
+                  RailWay
+                </span>
               </div>
-              <p className="text-gray-400">
-                Your trusted partner for railway reservations. Book, travel, enjoy.
+              <p className="text-gray-400 leading-relaxed">
+                Your trusted partner for railway reservations. Experience seamless booking, secure payments, and exceptional service.
               </p>
             </div>
             <div>
-              <h3 className="text-lg font-semibold mb-4">Quick Links</h3>
-              <ul className="space-y-2 text-gray-400">
-                <li><Link href="/" className="hover:text-white transition-colors">Home</Link></li>
-                <li><Link href="/login" className="hover:text-white transition-colors">Login</Link></li>
-                <li><Link href="/signup" className="hover:text-white transition-colors">Sign Up</Link></li>
+              <h3 className="text-lg font-semibold text-white mb-4">Quick Links</h3>
+              <ul className="space-y-3 text-gray-400">
+                <li>
+                  <Link href="/" className="hover:text-white transition-colors flex items-center gap-2">
+                    <ArrowRight className="w-4 h-4" />
+                    Home
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/login" className="hover:text-white transition-colors flex items-center gap-2">
+                    <ArrowRight className="w-4 h-4" />
+                    Login
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/signup" className="hover:text-white transition-colors flex items-center gap-2">
+                    <ArrowRight className="w-4 h-4" />
+                    Sign Up
+                  </Link>
+                </li>
               </ul>
             </div>
             <div>
-              <h3 className="text-lg font-semibold mb-4">Contact</h3>
-              <ul className="space-y-2 text-gray-400">
-                <li>Email: support@railway.com</li>
-                <li>Phone: +1 (555) 123-4567</li>
-                <li>24/7 Customer Support</li>
+              <h3 className="text-lg font-semibold text-white mb-4">Contact</h3>
+              <ul className="space-y-3 text-gray-400">
+                <li className="flex items-center gap-2">
+                  <MapPin className="w-4 h-4" />
+                  Email: support@railway.com
+                </li>
+                <li className="flex items-center gap-2">
+                  <Clock className="w-4 h-4" />
+                  Phone: +91 9457818861
+                </li>
+                <li className="flex items-center gap-2">
+                  <Shield className="w-4 h-4" />
+                  24/7 Customer Support
+                </li>
               </ul>
             </div>
           </div>
-          <div className="border-t border-gray-800 mt-8 pt-8 text-center text-gray-400">
-            <p>&copy; 2024 RailWay. All rights reserved.</p>
+          <div className="border-t border-gray-800 pt-8">
+            <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+              <p className="text-gray-400 text-center md:text-left">
+                &copy; 2025 RailWay. All rights reserved.
+              </p>
+              <motion.div
+                initial={{ opacity: 0 }}
+                whileInView={{ opacity: 1 }}
+                viewport={{ once: true }}
+                className="flex items-center gap-2 text-gray-400"
+              >
+                <span>Developed by</span>
+                <span className="font-bold text-white bg-gradient-to-r from-blue-400 to-indigo-400 bg-clip-text text-transparent">
+                  Ali Saqulain
+                </span>
+              </motion.div>
+            </div>
           </div>
         </div>
       </footer>
     </div>
   )
 }
-
