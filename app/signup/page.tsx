@@ -61,8 +61,8 @@ export default function SignupPage() {
     await new Promise(resolve => setTimeout(resolve, 1500))
     setIsSubmitting(false)
     
-    // Redirect to dashboard
-    router.push('/passenger/dashboard')
+    // Redirect to dashboard (optional - can be removed)
+    // router.push('/passenger/dashboard')
   }
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {

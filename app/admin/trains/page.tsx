@@ -5,6 +5,8 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { Plus, Edit2, Trash2, Search, Train, Sparkles, TrendingUp, AlertCircle } from 'lucide-react'
 import Navbar from '@/components/Navbar'
 import FormInput from '@/components/FormInput'
+import ConfirmDialog from '@/components/ConfirmDialog'
+import { useToast } from '@/components/ToastProvider'
 
 const trains = [
   {
@@ -52,6 +54,11 @@ export default function ManageTrainsPage() {
   const [searchQuery, setSearchQuery] = useState('')
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [editingTrain, setEditingTrain] = useState<any>(null)
+  const [deleteConfirm, setDeleteConfirm] = useState<{ isOpen: boolean; trainId: string | null }>({
+    isOpen: false,
+    trainId: null,
+  })
+  const { success, error } = useToast()
   const [formData, setFormData] = useState({
     name: '',
     number: '',
@@ -98,11 +105,18 @@ export default function ManageTrainsPage() {
   const handleSave = () => {
     // Save logic
     setIsModalOpen(false)
+    success(editingTrain ? 'Train updated successfully!' : 'Train added successfully!')
   }
 
   const handleDelete = (id: string) => {
-    if (confirm('Are you sure you want to delete this train?')) {
+    setDeleteConfirm({ isOpen: true, trainId: id })
+  }
+
+  const confirmDelete = () => {
+    if (deleteConfirm.trainId) {
       // Delete logic
+      success('Train deleted successfully!')
+      setDeleteConfirm({ isOpen: false, trainId: null })
     }
   }
 
@@ -405,6 +419,18 @@ export default function ManageTrainsPage() {
             </motion.div>
           )}
         </AnimatePresence>
+
+        {/* Delete Confirmation Dialog */}
+        <ConfirmDialog
+          isOpen={deleteConfirm.isOpen}
+          title="Delete Train"
+          message="Are you sure you want to delete this train? This action cannot be undone."
+          confirmText="Delete"
+          cancelText="Cancel"
+          type="danger"
+          onConfirm={confirmDelete}
+          onCancel={() => setDeleteConfirm({ isOpen: false, trainId: null })}
+        />
       </div>
     </div>
   )

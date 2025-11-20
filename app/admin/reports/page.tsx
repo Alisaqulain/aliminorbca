@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { Download, Calendar, TrendingUp, Sparkles, FileText, BarChart3 } from 'lucide-react'
 import Navbar from '@/components/Navbar'
+import { useToast } from '@/components/ToastProvider'
 import { LineChart, Line, BarChart, Bar, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts'
 
 const monthlyData = [
@@ -53,9 +54,10 @@ const aiInsights = [
 
 export default function ReportsPage() {
   const [selectedPeriod, setSelectedPeriod] = useState<'week' | 'month' | 'year'>('month')
+  const { success } = useToast()
 
   const handleGenerateReport = () => {
-    alert('Generating comprehensive AI-powered report...')
+    success('Generating comprehensive AI-powered report...')
   }
 
   return (

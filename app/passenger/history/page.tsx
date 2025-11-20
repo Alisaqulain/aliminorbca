@@ -5,6 +5,7 @@ import { motion } from 'framer-motion'
 import { Download, Calendar, MapPin, Clock, Train, AlertCircle, CheckCircle, Sparkles, TrendingUp } from 'lucide-react'
 import Navbar from '@/components/Navbar'
 import AIChatAssistant from '@/components/AIChatAssistant'
+import { useToast } from '@/components/ToastProvider'
 
 const tickets = [
   {
@@ -90,13 +91,14 @@ const aiSuggestions = [
 
 export default function TicketHistoryPage() {
   const [filter, setFilter] = useState<'all' | 'upcoming' | 'completed'>('all')
+  const { success } = useToast()
   const filteredTickets = filter === 'all' 
     ? tickets 
     : tickets.filter(t => t.status === filter)
 
   const handleDownload = (pnr: string) => {
     // Simulate download
-    alert(`Downloading ticket for PNR: ${pnr}`)
+    success(`Ticket downloaded successfully! PNR: ${pnr}`)
   }
 
   return (
