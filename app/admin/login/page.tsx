@@ -1,13 +1,13 @@
 'use client'
 
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
-import { Shield, Lock, Mail, ArrowRight } from 'lucide-react'
+import { Shield, ArrowRight } from 'lucide-react'
 import FormInput from '@/components/FormInput'
+import { useAuth } from '@/contexts/AuthContext'
 
 export default function AdminLoginPage() {
-  const router = useRouter()
+  const { login } = useAuth()
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -17,19 +17,28 @@ export default function AdminLoginPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    if (!formData.email || !formData.password) {
+      setErrors({ form: 'Email and password required' })
+      return
+    }
     setIsSubmitting(true)
-    await new Promise(resolve => setTimeout(resolve, 1500))
+    const { error } = await login(formData.email, formData.password, { requireAdmin: true })
     setIsSubmitting(false)
-    router.push('/admin/dashboard')
+    if (error) {
+      setErrors({ form: error })
+      return
+    }
+    // Redirect is handled by AuthContext (to /admin/dashboard if role is admin)
   }
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target
     setFormData(prev => ({ ...prev, [name]: value }))
+    if (errors[name] || errors.form) setErrors({})
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-gray-900 via-blue-900 to-indigo-900 relative overflow-hidden">
+    <div className="min-h-screen flex items-center justify-center px-4 sm:px-6 lg:px-8 bg-gradient-to-r from-purple-900 via-purple-950 to-indigo-950 relative overflow-hidden">
       {/* Animated Background */}
       <div className="absolute inset-0">
         <div className="absolute top-0 left-0 w-96 h-96 bg-blue-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob"></div>
@@ -63,11 +72,15 @@ export default function AdminLoginPage() {
             className="text-center mb-8"
           >
             <h1 className="text-3xl sm:text-4xl font-bold text-white mb-2">Admin Portal</h1>
-            <p className="text-gray-400">Secure access to management dashboard</p>
+            <p className="text-gray-400 mb-2">Secure access to management dashboard</p>
+            <p className="text-xs text-gray-500">Default: ali@gmail.com / Ali@2003 (created on first run)</p>
           </motion.div>
 
           {/* Form */}
           <form onSubmit={handleSubmit} className="space-y-6">
+            {errors.form && (
+              <p className="text-sm text-red-400 bg-red-500/20 px-3 py-2 rounded-lg">{errors.form}</p>
+            )}
             <motion.div
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}

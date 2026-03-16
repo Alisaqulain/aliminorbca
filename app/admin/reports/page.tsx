@@ -57,11 +57,32 @@ export default function ReportsPage() {
   const { success } = useToast()
 
   const handleGenerateReport = () => {
-    success('Generating comprehensive AI-powered report...')
+    const lines = [
+      'Report Type,Booking Trends & Analytics',
+      `Generated,${new Date().toISOString().slice(0, 10)}`,
+      `Period,${selectedPeriod}`,
+      '',
+      'Monthly Data',
+      'Month,Bookings,Revenue,Passengers',
+      ...monthlyData.map((d) => `${d.month},${d.bookings},${d.revenue},${d.passengers}`),
+      '',
+      'Top Routes',
+      'Route,Bookings,Revenue',
+      ...routeData.map((d) => `${d.name},${d.bookings},${d.revenue}`),
+    ]
+    const csv = lines.join('\n')
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `reports-${selectedPeriod}-${new Date().toISOString().slice(0, 10)}.csv`
+    a.click()
+    URL.revokeObjectURL(url)
+    success('Report downloaded successfully')
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
+    <div className="min-h-screen bg-gradient-to-r from-purple-900 via-purple-950 to-indigo-950">
       <Navbar userType="admin" />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -73,8 +94,8 @@ export default function ReportsPage() {
         >
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-4xl font-bold text-gray-900 mb-2">Reports & Analytics</h1>
-              <p className="text-gray-600">AI-powered insights and automated reports</p>
+              <h1 className="text-4xl font-bold text-white mb-2">Reports & Analytics</h1>
+              <p className="text-gray-400">AI-powered insights and automated reports</p>
             </div>
             <motion.button
               onClick={handleGenerateReport}
@@ -93,19 +114,19 @@ export default function ReportsPage() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
-          className="glass rounded-2xl p-4 mb-6"
+          className="glass rounded-2xl p-4 mb-6 border border-gray-600"
         >
-          <div className="flex items-center gap-3">
-            <Calendar className="w-5 h-5 text-gray-500" />
-            <span className="font-semibold text-gray-700">Period:</span>
-            {['week', 'month', 'year'].map((period) => (
+          <div className="flex items-center gap-3 flex-wrap">
+            <Calendar className="w-5 h-5 text-gray-400" />
+            <span className="font-semibold text-gray-300">Period:</span>
+            {(['week', 'month', 'year'] as const).map((period) => (
               <button
                 key={period}
-                onClick={() => setSelectedPeriod(period as any)}
+                onClick={() => setSelectedPeriod(period)}
                 className={`px-4 py-2 rounded-lg font-semibold transition-all capitalize ${
                   selectedPeriod === period
                     ? 'bg-blue-600 text-white'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    : 'bg-gray-700 text-gray-300 hover:bg-gray-600 border border-gray-600'
                 }`}
               >
                 {period}
@@ -123,7 +144,7 @@ export default function ReportsPage() {
         >
           <div className="flex items-center gap-2 mb-4">
             <Sparkles className="w-6 h-6 text-blue-600" />
-            <h2 className="text-2xl font-bold text-gray-900">AI-Generated Insights</h2>
+            <h2 className="text-2xl font-bold text-white">AI-Generated Insights</h2>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {aiInsights.map((insight, index) => (
@@ -133,18 +154,18 @@ export default function ReportsPage() {
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.3 + index * 0.1 }}
                 whileHover={{ scale: 1.02, y: -5 }}
-                className="glass rounded-xl p-5 border-2 border-blue-200 bg-gradient-to-r from-blue-50 to-indigo-50"
+                className="glass rounded-xl p-5 border-2 border-blue-500/50 bg-gray-800/80"
               >
                 <div className="flex items-start justify-between mb-3">
-                  <h3 className="font-bold text-gray-900">{insight.title}</h3>
-                  <span className="px-2 py-1 bg-white/80 rounded text-xs font-semibold text-gray-700">
+                  <h3 className="font-bold text-white">{insight.title}</h3>
+                  <span className="px-2 py-1 bg-gray-700/80 rounded text-xs font-semibold text-gray-300">
                     {insight.confidence}%
                   </span>
                 </div>
-                <p className="text-sm text-gray-700 mb-3">{insight.insight}</p>
-                <div className="p-3 bg-white/80 rounded-lg">
-                  <p className="text-xs font-semibold text-gray-600 mb-1">Recommendation:</p>
-                  <p className="text-xs text-gray-700">{insight.recommendation}</p>
+                <p className="text-sm text-gray-300 mb-3">{insight.insight}</p>
+                <div className="p-3 bg-gray-700/50 rounded-lg border border-gray-600/50">
+                  <p className="text-xs font-semibold text-gray-400 mb-1">Recommendation:</p>
+                  <p className="text-xs text-gray-300">{insight.recommendation}</p>
                 </div>
               </motion.div>
             ))}
@@ -161,10 +182,10 @@ export default function ReportsPage() {
             className="glass rounded-2xl p-6"
           >
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xl font-bold text-gray-900">Revenue Trend</h2>
+              <h2 className="text-xl font-bold text-white">Revenue Trend</h2>
               <div className="flex items-center gap-2">
-                <Sparkles className="w-5 h-5 text-blue-600" />
-                <span className="text-sm text-gray-600">AI Forecast</span>
+                <Sparkles className="w-5 h-5 text-blue-400" />
+                <span className="text-sm text-gray-400">AI Forecast</span>
               </div>
             </div>
             <ResponsiveContainer width="100%" height={300}>
@@ -185,7 +206,7 @@ export default function ReportsPage() {
             transition={{ delay: 0.5 }}
             className="glass rounded-2xl p-6"
           >
-            <h2 className="text-xl font-bold text-gray-900 mb-6">Bookings by Class</h2>
+            <h2 className="text-xl font-bold text-white mb-6">Bookings by Class</h2>
             <ResponsiveContainer width="100%" height={300}>
               <PieChart>
                 <Pie
@@ -215,7 +236,7 @@ export default function ReportsPage() {
           transition={{ delay: 0.6 }}
           className="glass rounded-2xl p-6 mb-8"
         >
-          <h2 className="text-xl font-bold text-gray-900 mb-6">Route Performance</h2>
+          <h2 className="text-xl font-bold text-white mb-6">Route Performance</h2>
           <ResponsiveContainer width="100%" height={400}>
             <BarChart data={routeData}>
               <CartesianGrid strokeDasharray="3 3" />
@@ -258,8 +279,8 @@ export default function ReportsPage() {
                     {stat.change}
                   </span>
                 </div>
-                <p className="text-2xl font-bold text-gray-900 mb-1">{stat.value}</p>
-                <p className="text-sm text-gray-600">{stat.label}</p>
+                <p className="text-2xl font-bold text-white mb-1">{stat.value}</p>
+                <p className="text-sm text-gray-400">{stat.label}</p>
               </motion.div>
             )
           })}

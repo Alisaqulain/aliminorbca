@@ -1,120 +1,98 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Search, TrendingUp, Clock, MapPin } from 'lucide-react'
+import { Search, MapPin, Loader2 } from 'lucide-react'
 
-interface SearchSuggestion {
-  id: string
-  text: string
-  type: 'station' | 'route' | 'popular'
-  popularity?: number
+interface StationSuggestion {
+  _id: string
+  name: string
+  code: string
+  city?: string
 }
-
-const POPULAR_STATIONS = [
-  'Mumbai Central', 'New Delhi', 'Bangalore City', 'Chennai Central',
-  'Kolkata Howrah', 'Hyderabad Deccan', 'Pune Junction', 'Ahmedabad Junction',
-]
-
-const POPULAR_ROUTES = [
-  { from: 'Mumbai Central', to: 'New Delhi', popularity: 95 },
-  { from: 'Bangalore City', to: 'Chennai Central', popularity: 88 },
-  { from: 'Kolkata Howrah', to: 'New Delhi', popularity: 82 },
-  { from: 'Pune Junction', to: 'Mumbai Central', popularity: 79 },
-]
 
 interface SmartSearchProps {
   value: string
   onChange: (value: string) => void
   placeholder?: string
-  onSelect?: (suggestion: SearchSuggestion) => void
+  excludeValue?: string
 }
 
 export default function SmartSearch({
   value,
   onChange,
-  placeholder = 'Search stations or routes...',
-  onSelect,
+  placeholder = 'Search stations...',
+  excludeValue = '',
 }: SmartSearchProps) {
-  const [suggestions, setSuggestions] = useState<SearchSuggestion[]>([])
+  const [suggestions, setSuggestions] = useState<StationSuggestion[]>([])
   const [isOpen, setIsOpen] = useState(false)
-  const [showPopular, setShowPopular] = useState(true)
-  const inputRef = useRef<HTMLInputElement>(null)
+  const [loading, setLoading] = useState(false)
   const containerRef = useRef<HTMLDivElement>(null)
 
-  useEffect(() => {
-    if (value.length > 0) {
-      const filtered = [
-        ...POPULAR_STATIONS.filter((s) =>
-          s.toLowerCase().includes(value.toLowerCase())
-        ).map((s) => ({
-          id: s,
-          text: s,
-          type: 'station' as const,
-        })),
-        ...POPULAR_ROUTES.filter(
-          (r) =>
-            r.from.toLowerCase().includes(value.toLowerCase()) ||
-            r.to.toLowerCase().includes(value.toLowerCase())
-        ).map((r) => ({
-          id: `${r.from}-${r.to}`,
-          text: `${r.from} → ${r.to}`,
-          type: 'route' as const,
-          popularity: r.popularity,
-        })),
-      ]
-      setSuggestions(filtered.slice(0, 5))
-      setIsOpen(true)
-      setShowPopular(false)
-    } else {
-      setSuggestions([])
-      setIsOpen(false)
-      setShowPopular(true)
+  const fetchStations = useCallback(async (q: string) => {
+    if (!q || q.length < 1) {
+      const res = await fetch(`/api/stations`)
+      const data = await res.json()
+      const list = (data.stations || []).slice(0, 15)
+      setSuggestions(list)
+      return
     }
-  }, [value])
+    setLoading(true)
+    try {
+      const res = await fetch(`/api/stations?q=${encodeURIComponent(q)}`)
+      const data = await res.json()
+      let list = (data.stations || []).slice(0, 20) as StationSuggestion[]
+      const exclude = excludeValue?.trim().toLowerCase()
+      if (exclude) {
+        list = list.filter((s) => s.name.toLowerCase() !== exclude)
+      }
+      setSuggestions(list)
+    } finally {
+      setLoading(false)
+    }
+  }, [excludeValue])
+
+  useEffect(() => {
+    const t = setTimeout(() => fetchStations(value), value.length === 0 ? 0 : 300)
+    return () => clearTimeout(t)
+  }, [value, fetchStations])
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (
-        containerRef.current &&
-        !containerRef.current.contains(event.target as Node)
-      ) {
+      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
         setIsOpen(false)
       }
     }
-
     document.addEventListener('mousedown', handleClickOutside)
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [])
 
-  const handleSelect = (suggestion: SearchSuggestion) => {
-    onChange(suggestion.text)
+  const handleSelect = (name: string) => {
+    onChange(name)
     setIsOpen(false)
-    onSelect?.(suggestion)
   }
 
   return (
     <div ref={containerRef} className="relative w-full">
       <div className="relative">
-        <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+        <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 dark:text-gray-500" />
         <input
-          ref={inputRef}
           type="text"
           value={value}
           onChange={(e) => onChange(e.target.value)}
           onFocus={() => setIsOpen(true)}
           placeholder={placeholder}
-          className="w-full pl-12 pr-4 py-3 rounded-lg border-2 border-gray-300 bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:outline-none transition-all"
+          className="w-full pl-12 pr-10 py-3 rounded-xl border-2 border-gray-600 bg-gray-800 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none transition-all text-white placeholder:text-gray-500"
         />
-        {value && (
+        {loading && (
+          <Loader2 className="absolute right-10 top-1/2 -translate-y-1/2 w-5 h-5 text-blue-500 animate-spin" />
+        )}
+        {value && !loading && (
           <motion.button
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            onClick={() => {
-              onChange('')
-              inputRef.current?.focus()
-            }}
-            className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+            onClick={() => { onChange(''); setIsOpen(true) }}
+            className="absolute right-4 top-1/2 -translate-y-1/2 w-6 h-6 flex items-center justify-center rounded-full text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
           >
             ×
           </motion.button>
@@ -124,96 +102,31 @@ export default function SmartSearch({
       <AnimatePresence>
         {isOpen && (
           <motion.div
-            initial={{ opacity: 0, y: -10 }}
+            initial={{ opacity: 0, y: -8 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            className="absolute top-full mt-2 w-full glass rounded-lg shadow-xl border border-white/20 z-50 max-h-96 overflow-y-auto"
+            exit={{ opacity: 0, y: -8 }}
+            className="absolute top-full mt-2 w-full rounded-xl bg-gray-800 border border-gray-700 shadow-xl z-50 max-h-72 overflow-y-auto"
           >
-            {showPopular && value.length === 0 && (
-              <div className="p-4">
-                <div className="flex items-center gap-2 mb-3">
-                  <TrendingUp className="w-5 h-5 text-blue-600" />
-                  <h3 className="font-semibold text-gray-900">Popular Routes</h3>
-                </div>
-                <div className="space-y-2">
-                  {POPULAR_ROUTES.map((route, index) => (
-                    <motion.button
-                      key={`${route.from}-${route.to}`}
-                      initial={{ opacity: 0, x: -20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: index * 0.05 }}
-                      onClick={() =>
-                        handleSelect({
-                          id: `${route.from}-${route.to}`,
-                          text: `${route.from} → ${route.to}`,
-                          type: 'route',
-                          popularity: route.popularity,
-                        })
-                      }
-                      className="w-full text-left p-3 rounded-lg hover:bg-blue-50 transition-colors flex items-center justify-between"
-                    >
-                      <div className="flex items-center gap-3">
-                        <MapPin className="w-4 h-4 text-blue-600" />
-                        <div>
-                          <p className="font-medium text-gray-900">
-                            {route.from} → {route.to}
-                          </p>
-                          <p className="text-xs text-gray-500">Popular route</p>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <div className="w-16 h-2 bg-gray-200 rounded-full overflow-hidden">
-                          <motion.div
-                            initial={{ width: 0 }}
-                            animate={{ width: `${route.popularity}%` }}
-                            transition={{ delay: index * 0.1 }}
-                            className="h-full bg-gradient-to-r from-blue-500 to-indigo-600"
-                          />
-                        </div>
-                        <span className="text-xs font-semibold text-blue-600">
-                          {route.popularity}%
-                        </span>
-                      </div>
-                    </motion.button>
-                  ))}
-                </div>
+            {suggestions.length === 0 && !loading ? (
+              <div className="p-4 text-center text-gray-600 dark:text-gray-400 text-sm">
+                {value.length < 1 ? 'Type to search stations' : 'No stations found. Seed stations: POST /api/stations/seed'}
               </div>
-            )}
-
-            {suggestions.length > 0 && (
-              <div className="p-2">
-                {suggestions.map((suggestion, index) => (
-                  <motion.button
-                    key={suggestion.id}
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: index * 0.05 }}
-                    onClick={() => handleSelect(suggestion)}
-                    className="w-full text-left p-3 rounded-lg hover:bg-blue-50 transition-colors flex items-center gap-3"
+            ) : (
+              <div className="py-2">
+                {suggestions.map((s) => (
+                  <button
+                    key={s._id}
+                    type="button"
+                    onClick={() => handleSelect(s.name)}
+                    className="w-full text-left px-4 py-3 flex items-center gap-3 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors text-gray-900 dark:text-white"
                   >
-                    {suggestion.type === 'route' ? (
-                      <MapPin className="w-5 h-5 text-blue-600" />
-                    ) : (
-                      <Clock className="w-5 h-5 text-indigo-600" />
-                    )}
-                    <div className="flex-1">
-                      <p className="font-medium text-gray-900">{suggestion.text}</p>
-                      <p className="text-xs text-gray-500">
-                        {suggestion.type === 'route' ? 'Popular route' : 'Station'}
-                        {suggestion.popularity && ` • ${suggestion.popularity}% popular`}
-                      </p>
+                    <MapPin className="w-5 h-5 text-blue-500 shrink-0" />
+                    <div>
+                      <p className="font-medium">{s.name}</p>
+                      {s.code && <p className="text-xs text-gray-500 dark:text-gray-400">{s.code}</p>}
                     </div>
-                    {suggestion.popularity && (
-                      <TrendingUp className="w-4 h-4 text-green-500" />
-                    )}
-                  </motion.button>
+                  </button>
                 ))}
-              </div>
-            )}
-
-            {!showPopular && suggestions.length === 0 && value.length > 0 && (
-              <div className="p-4 text-center text-gray-500">
-                No suggestions found
               </div>
             )}
           </motion.div>
@@ -222,4 +135,3 @@ export default function SmartSearch({
     </div>
   )
 }
-

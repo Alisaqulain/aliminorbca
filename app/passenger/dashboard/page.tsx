@@ -1,44 +1,26 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { Train, Calendar, MapPin, Clock, TrendingUp, ArrowRight, Ticket, Search, Download, Filter, MoreVertical, Sparkles } from 'lucide-react'
 import Link from 'next/link'
 import Navbar from '@/components/Navbar'
 import AIChatAssistant from '@/components/AIChatAssistant'
 import AnimatedBackground from '@/components/AnimatedBackground'
+import { bookingsApi } from '@/lib/api'
+import { format } from 'date-fns'
 import { LineChart, Line, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from 'recharts'
 
-const upcomingJourneys = [
-  {
-    id: '1',
-    trainName: 'Rajdhani Express',
-    trainNumber: '12301',
-    from: 'New Delhi',
-    to: 'Mumbai Central',
-    date: '2025-01-15',
-    time: '16:30',
-    status: 'Confirmed',
-    pnr: 'PNR123456',
-    class: 'AC 2 Tier',
-    coach: 'B3',
-    seat: '42',
-  },
-  {
-    id: '2',
-    trainName: 'Shatabdi Express',
-    trainNumber: '12001',
-    from: 'Mumbai Central',
-    to: 'Pune Junction',
-    date: '2025-01-20',
-    time: '06:00',
-    status: 'Confirmed',
-    pnr: 'PNR789012',
-    class: 'AC 3 Tier',
-    coach: 'A2',
-    seat: '18',
-  },
-]
+interface BookingItem {
+  _id: string
+  pnr: string
+  status: string
+  journeyDate: string
+  classType?: string
+  coach?: string
+  seatNumber?: string
+  trainId?: { trainName?: string; trainNumber?: string; source?: string; destination?: string; departureTime?: string }
+}
 
 const aiRecommendations = [
   {
@@ -72,9 +54,53 @@ const chartData = [
 
 export default function PassengerDashboard() {
   const [selectedTab, setSelectedTab] = useState<'journeys' | 'recommendations'>('journeys')
+  const [bookings, setBookings] = useState<BookingItem[]>([])
+  const [bookingsLoading, setBookingsLoading] = useState(true)
+  const [chartMetric, setChartMetric] = useState<'bookings' | 'revenue'>('bookings')
+
+  const handleDownloadTrends = () => {
+    const headers = 'Month,Bookings,Revenue (₹)\n'
+    const rows = chartData.map((d) => `${d.month},${d.bookings},${d.revenue}`).join('\n')
+    const csv = headers + rows
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `booking-trends-${new Date().toISOString().slice(0, 10)}.csv`
+    a.click()
+    URL.revokeObjectURL(url)
+  }
+
+  useEffect(() => {
+    bookingsApi.list().then(({ data }) => {
+      if (data?.bookings && Array.isArray(data.bookings)) {
+        setBookings(data.bookings as BookingItem[])
+      }
+      setBookingsLoading(false)
+    }).catch(() => setBookingsLoading(false))
+  }, [])
+
+  const upcomingBookings = bookings.filter((b) => b.status !== 'cancelled')
+  const upcomingJourneys = upcomingBookings.map((b) => {
+    const t = b.trainId
+    return {
+      id: b._id,
+      trainName: t?.trainName ?? 'Train',
+      trainNumber: t?.trainNumber ?? '-',
+      from: t?.source ?? '-',
+      to: t?.destination ?? '-',
+      date: b.journeyDate,
+      time: t?.departureTime ?? '--:--',
+      status: b.status,
+      pnr: b.pnr,
+      class: b.classType ?? '-',
+      coach: b.coach ?? '-',
+      seat: b.seatNumber ?? 'WL',
+    }
+  })
 
   return (
-    <div className="min-h-screen relative overflow-hidden">
+    <div className="min-h-screen relative overflow-hidden bg-gradient-to-r from-purple-900 via-purple-950 to-indigo-950">
       <AnimatedBackground />
       <div className="relative z-10">
         <Navbar userType="passenger" />
@@ -92,8 +118,8 @@ export default function PassengerDashboard() {
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
             {[
-            { label: 'Upcoming Trips', value: '2', icon: Calendar, change: '+1 this month', color: 'purple', gradient: 'from-purple-500 to-pink-500' },
-            { label: 'Total Bookings', value: '24', icon: Ticket, change: '+4 this month', color: 'pink', gradient: 'from-pink-500 to-rose-500' },
+            { label: 'Upcoming Trips', value: String(upcomingJourneys.length), icon: Calendar, change: upcomingJourneys.length ? 'View your tickets' : 'Book a trip', color: 'purple', gradient: 'from-purple-500 to-pink-500' },
+            { label: 'Total Bookings', value: String(bookings.length), icon: Ticket, change: bookings.length ? 'All time' : 'No bookings yet', color: 'pink', gradient: 'from-pink-500 to-rose-500' },
             { label: 'Saved Routes', value: '5', icon: MapPin, change: '2 active', color: 'violet', gradient: 'from-violet-500 to-purple-500' },
             { label: 'Loyalty Points', value: '1,250', icon: TrendingUp, change: '+150 points', color: 'emerald', gradient: 'from-emerald-500 to-teal-500' },
           ].map((stat, index) => {
@@ -153,7 +179,20 @@ export default function PassengerDashboard() {
                 {/* Journeys Tab */}
                 {selectedTab === 'journeys' && (
                   <div className="space-y-4">
-                    {upcomingJourneys.map((journey, index) => (
+                    {bookingsLoading ? (
+                      <div className="text-center py-8 text-gray-400">Loading your bookings...</div>
+                    ) : upcomingJourneys.length === 0 ? (
+                      <div className="text-center py-10">
+                        <Ticket className="w-14 h-14 text-gray-500 mx-auto mb-4" />
+                        <p className="text-lg text-white mb-2">No upcoming journeys</p>
+                        <p className="text-gray-400 mb-6">Book a ticket to see your trips here</p>
+                        <Link href="/passenger/search" className="btn-primary inline-flex items-center gap-2 py-3 px-6">
+                          <Search className="w-5 h-5" />
+                          Book a ticket now
+                        </Link>
+                      </div>
+                    ) : (
+                    upcomingJourneys.map((journey, index) => (
                       <motion.div
                         key={journey.id}
                         initial={{ opacity: 0, y: 10 }}
@@ -187,7 +226,7 @@ export default function PassengerDashboard() {
                           <div className="bg-slate-700/40 backdrop-blur-sm rounded-lg p-3 border border-purple-400/20">
                             <p className="text-xs text-gray-400 mb-1">To</p>
                             <p className="text-sm font-semibold text-white">{journey.to}</p>
-                            <p className="text-xs text-pink-300 font-medium mt-1">Next day</p>
+                            <p className="text-xs text-pink-300 font-medium mt-1">{format(new Date(journey.date), 'dd MMM yyyy')}</p>
                           </div>
                         </div>
 
@@ -199,14 +238,14 @@ export default function PassengerDashboard() {
                             <span>•</span>
                             <span>Seat {journey.seat}</span>
                           </div>
-                          <Link href={`/passenger/tickets/${journey.id}`}>
+                          <Link href={`/ticket/${journey.id}`}>
                             <button className="text-sm font-medium text-purple-300 hover:text-pink-300 flex items-center gap-1 group">
-                              View Details <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                              View Ticket <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                             </button>
                           </Link>
                         </div>
                       </motion.div>
-                    ))}
+                    )))}
                   </div>
                 )}
 
@@ -264,14 +303,22 @@ export default function PassengerDashboard() {
               <div className="flex items-center justify-between mb-6">
                 <div>
                   <h2 className="text-lg font-semibold text-white">Booking Trends</h2>
-                  <p className="text-sm text-gray-400 mt-1">Last 6 months overview</p>
+                  <p className="text-sm text-gray-400 mt-1">Last 6 months · Showing: {chartMetric === 'bookings' ? 'Bookings' : 'Revenue (₹)'}</p>
                 </div>
                 <div className="flex items-center gap-2">
-                  <button className="p-2 hover:bg-slate-700/50 rounded-lg transition-colors">
-                    <Filter className="w-4 h-4 text-gray-400" />
+                  <button
+                    onClick={() => setChartMetric((m) => (m === 'bookings' ? 'revenue' : 'bookings'))}
+                    className="p-2 hover:bg-slate-700/50 rounded-lg transition-colors text-gray-400 hover:text-white"
+                    title={chartMetric === 'bookings' ? 'Show revenue' : 'Show bookings'}
+                  >
+                    <Filter className="w-4 h-4" />
                   </button>
-                  <button className="p-2 hover:bg-slate-700/50 rounded-lg transition-colors">
-                    <Download className="w-4 h-4 text-gray-400" />
+                  <button
+                    onClick={handleDownloadTrends}
+                    className="p-2 hover:bg-slate-700/50 rounded-lg transition-colors text-gray-400 hover:text-white"
+                    title="Download as CSV"
+                  >
+                    <Download className="w-4 h-4" />
                   </button>
                 </div>
               </div>
@@ -283,10 +330,14 @@ export default function PassengerDashboard() {
                       <stop offset="50%" stopColor="#ec4899" stopOpacity={0.2}/>
                       <stop offset="95%" stopColor="#f43f5e" stopOpacity={0}/>
                     </linearGradient>
+                    <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#0ea5e9" stopOpacity={0.4}/>
+                      <stop offset="95%" stopColor="#0ea5e9" stopOpacity={0}/>
+                    </linearGradient>
                   </defs>
                   <CartesianGrid strokeDasharray="3 3" stroke="#4b5563" />
                   <XAxis dataKey="month" stroke="#9ca3af" fontSize={12} />
-                  <YAxis stroke="#9ca3af" fontSize={12} />
+                  <YAxis stroke="#9ca3af" fontSize={12} tickFormatter={(v) => chartMetric === 'revenue' ? `₹${(v / 1000).toFixed(0)}k` : v} />
                   <Tooltip 
                     contentStyle={{ 
                       backgroundColor: '#1e293b', 
@@ -295,15 +346,17 @@ export default function PassengerDashboard() {
                       fontSize: '12px',
                       color: '#fff',
                       boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.3)'
-                    }} 
+                    }}
+                    formatter={(value: number) => chartMetric === 'revenue' ? `₹${value.toLocaleString()}` : value}
+                    labelFormatter={(label) => `Month: ${label}`}
                   />
                   <Area 
                     type="monotone" 
-                    dataKey="bookings" 
-                    stroke="#a855f7" 
+                    dataKey={chartMetric} 
+                    stroke={chartMetric === 'bookings' ? '#a855f7' : '#0ea5e9'}
                     strokeWidth={3}
                     fillOpacity={1}
-                    fill="url(#colorBookings)" 
+                    fill={chartMetric === 'bookings' ? 'url(#colorBookings)' : 'url(#colorRevenue)'}
                   />
                 </AreaChart>
               </ResponsiveContainer>

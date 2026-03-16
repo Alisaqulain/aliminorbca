@@ -1,14 +1,19 @@
 'use client'
 
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { Suspense, useState } from 'react'
+import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
-import { Train, Mail, Lock, ArrowRight } from 'lucide-react'
+import Image from 'next/image'
+import { ArrowRight } from 'lucide-react'
 import FormInput from '@/components/FormInput'
+import PublicNavbar from '@/components/PublicNavbar'
+import { useAuth } from '@/contexts/AuthContext'
 
-export default function LoginPage() {
-  const router = useRouter()
+function LoginForm() {
+  const searchParams = useSearchParams()
+  const redirect = searchParams.get('redirect') || '/passenger/dashboard'
+  const { login } = useAuth()
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -18,19 +23,19 @@ export default function LoginPage() {
 
   const validate = () => {
     const newErrors: { [key: string]: string } = {}
-    
+
     if (!formData.email) {
       newErrors.email = 'Email is required'
     } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
       newErrors.email = 'Email is invalid'
     }
-    
+
     if (!formData.password) {
       newErrors.password = 'Password is required'
     } else if (formData.password.length < 6) {
       newErrors.password = 'Password must be at least 6 characters'
     }
-    
+
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
   }
@@ -40,12 +45,12 @@ export default function LoginPage() {
     if (!validate()) return
 
     setIsSubmitting(true)
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1500))
+    const { error } = await login(formData.email, formData.password, { redirectTo: redirect })
     setIsSubmitting(false)
-    
-    // Redirect to dashboard (optional - can be removed)
-    // router.push('/passenger/dashboard')
+    if (error) {
+      setErrors({ form: error })
+      return
+    }
   }
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -57,50 +62,30 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
-      <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute -top-40 -right-40 w-80 h-80 bg-blue-400 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob"></div>
-        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-purple-400 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob animation-delay-2000"></div>
-        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-80 h-80 bg-indigo-400 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob animation-delay-4000"></div>
-      </div>
-
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6 }}
-        className="relative w-full max-w-md"
-      >
-        <div className="glass rounded-3xl shadow-2xl p-8 sm:p-10">
-          {/* Logo */}
-          <motion.div
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            transition={{ delay: 0.2, type: 'spring' }}
-            className="flex justify-center mb-8"
-          >
-            <div className="w-20 h-20 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-2xl flex items-center justify-center shadow-lg">
-              <Train className="w-10 h-10 text-white" />
+    <div className="min-h-screen bg-gradient-to-r from-purple-900 via-purple-950 to-indigo-950">
+      <PublicNavbar />
+      <div className="relative flex items-center justify-center min-h-[calc(100vh-4rem)] px-4 sm:px-6 py-12">
+        <motion.div
+          initial={{ opacity: 0, y: 24 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          className="w-full max-w-md"
+        >
+          <div className="bg-gray-800 border border-gray-700 rounded-3xl shadow-xl p-8 sm:p-10">
+            <div className="flex justify-center mb-6">
+              <Image src="/logo.png" alt="AliRail" width={140} height={48} className="h-11 w-auto object-contain invert" />
             </div>
-          </motion.div>
+            <div className="text-center mb-8">
+              <h1 className="text-2xl sm:text-3xl font-bold text-white mb-1">Welcome back</h1>
+              <p className="text-gray-400 text-sm">Sign in to book trains and manage tickets</p>
+            </div>
 
-          {/* Title */}
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
-            className="text-center mb-8"
-          >
-            <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-2">Welcome Back</h1>
-            <p className="text-gray-600">Sign in to continue your journey</p>
-          </motion.div>
-
-          {/* Form */}
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <motion.div
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.4 }}
-            >
+            <form onSubmit={handleSubmit} className="space-y-5">
+              {errors.form && (
+                <div className="rounded-xl bg-red-900/30 border border-red-700 px-4 py-3 text-sm text-red-300">
+                  {errors.form}
+                </div>
+              )}
               <FormInput
                 label="Email Address"
                 type="email"
@@ -111,13 +96,6 @@ export default function LoginPage() {
                 error={errors.email}
                 required
               />
-            </motion.div>
-
-            <motion.div
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.5 }}
-            >
               <FormInput
                 label="Password"
                 type="password"
@@ -128,75 +106,63 @@ export default function LoginPage() {
                 error={errors.password}
                 required
               />
-            </motion.div>
-
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.6 }}
-              className="flex items-center justify-between"
-            >
-              <label className="flex items-center">
-                <input type="checkbox" className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500" />
-                <span className="ml-2 text-sm text-gray-600">Remember me</span>
-              </label>
-              <Link href="#" className="text-sm text-blue-600 hover:text-blue-700 font-semibold">
-                Forgot password?
-              </Link>
-            </motion.div>
-
-            <motion.button
-              type="submit"
-              disabled={isSubmitting}
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.7 }}
-              className="w-full btn-primary text-lg py-4 flex items-center justify-center gap-2"
-            >
-              {isSubmitting ? (
-                <>
-                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                  Signing in...
-                </>
-              ) : (
-                <>
-                  Sign In <ArrowRight className="w-5 h-5" />
-                </>
-              )}
-            </motion.button>
-          </form>
-
-          {/* Sign Up Link */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.8 }}
-            className="mt-6 text-center"
-          >
-            <p className="text-gray-600">
-              Don't have an account?{' '}
-              <Link href="/signup" className="text-blue-600 hover:text-blue-700 font-semibold">
-                Sign up
-              </Link>
+              <div className="flex items-center justify-between text-sm">
+                <label className="flex items-center gap-2 text-gray-400 cursor-pointer">
+                  <input type="checkbox" className="w-4 h-4 text-blue-500 rounded border-gray-600 bg-gray-700 focus:ring-blue-500" />
+                  Remember me
+                </label>
+                <Link href="#" className="text-blue-400 hover:text-blue-300 font-medium">Forgot password?</Link>
+              </div>
+              <button
+                type="submit"
+                disabled={isSubmitting}
+                className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold py-3.5 px-4 rounded-xl shadow-lg shadow-blue-500/25 transition-all duration-200 flex items-center justify-center gap-2 disabled:opacity-70"
+              >
+                {isSubmitting ? (
+                  <>
+                    <span className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    Signing in...
+                  </>
+                ) : (
+                  <>Sign in <ArrowRight className="w-5 h-5" /></>
+                )}
+              </button>
+            </form>
+            <p className="mt-6 text-center text-sm text-gray-400">
+              Don&apos;t have an account?{' '}
+              <Link href="/signup" className="text-blue-400 hover:text-blue-300 font-semibold">Sign up</Link>
             </p>
-          </motion.div>
-
-          {/* Admin Link */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.9 }}
-            className="mt-4 text-center"
-          >
-            <Link href="/admin/login" className="text-sm text-gray-500 hover:text-gray-700">
-              Admin Login
-            </Link>
-          </motion.div>
-        </div>
-      </motion.div>
+          </div>
+        </motion.div>
+      </div>
     </div>
   )
 }
 
+function LoginFallback() {
+  return (
+    <div className="min-h-screen bg-gradient-to-r from-purple-900 via-purple-950 to-indigo-950 flex items-center justify-center">
+      <PublicNavbar />
+      <div className="w-full max-w-md px-4">
+        <div className="bg-gray-800 border border-gray-700 rounded-3xl shadow-xl p-8 sm:p-10 animate-pulse">
+          <div className="h-11 bg-gray-700 rounded mx-auto mb-6 w-32" />
+          <div className="h-8 bg-gray-700 rounded mb-2 w-3/4 mx-auto" />
+          <div className="h-4 bg-gray-700 rounded w-1/2 mx-auto mb-8" />
+          <div className="space-y-4">
+            <div className="h-12 bg-gray-700 rounded-xl" />
+            <div className="h-12 bg-gray-700 rounded-xl" />
+            <div className="h-12 bg-gray-700 rounded-xl" />
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<LoginFallback />}>
+      <LoginForm />
+    </Suspense>
+  )
+}

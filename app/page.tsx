@@ -1,13 +1,20 @@
 'use client'
 
+import { useState } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import { useRouter } from 'next/navigation'
-import { motion } from 'framer-motion'
-import { Train, ArrowRight, CheckCircle, BarChart3, Shield, Zap, Globe2, Users, TrendingUp, Award, Clock, Sparkles, Star, Play, Award as AwardIcon, Target, Rocket } from 'lucide-react'
+import { motion, AnimatePresence } from 'framer-motion'
+import { Train, ArrowRight, CheckCircle, BarChart3, Shield, Zap, Globe2, Users, TrendingUp, Award, Clock, Sparkles, Star, Play, Award as AwardIcon, Target, Rocket, X } from 'lucide-react'
 import AnimatedBackground from '@/components/AnimatedBackground'
+
+// Watch Demo video: https://youtu.be/42M1WErbWNA
+const DEMO_VIDEO_ID = '42M1WErbWNA'
+const DEMO_VIDEO_URL = `https://www.youtube.com/embed/${DEMO_VIDEO_ID}?autoplay=1`
 
 export default function HomePage() {
   const router = useRouter()
+  const [demoVideoOpen, setDemoVideoOpen] = useState(false)
 
   const features = [
     {
@@ -85,7 +92,44 @@ export default function HomePage() {
   ]
 
   return (
-    <div className="min-h-screen relative overflow-hidden bg-gradient-to-br from-slate-900 via-purple-900 to-indigo-900">
+    <div className="min-h-screen relative overflow-hidden bg-gradient-to-r from-purple-900 via-purple-950 to-indigo-950">
+      {/* Watch Demo Video Popup */}
+      <AnimatePresence>
+        {demoVideoOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm"
+            onClick={() => setDemoVideoOpen(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              transition={{ type: 'spring', damping: 25 }}
+              className="relative w-full max-w-4xl aspect-video rounded-2xl overflow-hidden shadow-2xl border-2 border-purple-500/50 bg-black"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <button
+                onClick={() => setDemoVideoOpen(false)}
+                className="absolute top-4 right-4 z-10 p-2 rounded-full bg-black/60 hover:bg-black/80 text-white transition-colors"
+                aria-label="Close"
+              >
+                <X className="w-6 h-6" />
+              </button>
+              <iframe
+                src={demoVideoOpen ? DEMO_VIDEO_URL : ''}
+                title="AliRail Demo"
+                className="absolute inset-0 w-full h-full"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+              />
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Animated Train Background */}
       <AnimatedBackground />
       
@@ -102,20 +146,15 @@ export default function HomePage() {
       </div>
 
       {/* Navigation */}
-      <nav className="fixed top-0 w-full z-50 bg-slate-900/80 backdrop-blur-xl border-b border-purple-500/20 shadow-2xl">
+      <nav className="fixed top-0 w-full z-50 bg-purple-950/80 backdrop-blur-xl border-b border-purple-400/20 shadow-2xl">
         <div className="max-w-7xl mx-auto px-6 lg:px-8">
           <div className="flex justify-between items-center h-20">
             <motion.div
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
-              className="flex items-center space-x-3"
+              className="flex items-center"
             >
-              <div className="w-14 h-14 bg-gradient-to-br from-purple-500 via-pink-500 to-rose-500 rounded-xl flex items-center justify-center shadow-lg shadow-purple-500/50">
-                <Train className="w-8 h-8 text-white" />
-              </div>
-              <span className="text-3xl font-bold bg-gradient-to-r from-purple-400 via-pink-400 to-rose-400 bg-clip-text text-transparent">
-                RailWay
-              </span>
+              <Image src="/logo.png" alt="AliRail" width={160} height={48} className="h-12 w-auto object-contain" priority />
             </motion.div>
             <div className="hidden md:flex items-center space-x-6">
               <Link href="/passenger/dashboard" className="text-gray-300 hover:text-white font-medium transition-colors">
@@ -189,7 +228,7 @@ export default function HomePage() {
                   <ArrowRight className="w-6 h-6" />
                 </motion.button>
                 <motion.button
-                  onClick={() => router.push('/passenger/search')}
+                  onClick={() => setDemoVideoOpen(true)}
                   whileHover={{ scale: 1.05, y: -2 }}
                   whileTap={{ scale: 0.98 }}
                   className="px-8 py-4 bg-slate-800/80 backdrop-blur-sm text-white font-semibold rounded-xl border-2 border-purple-500/30 hover:border-purple-400 hover:bg-slate-700/80 transition-all shadow-lg text-lg"
@@ -505,13 +544,8 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-12 mb-8">
             <div>
-              <div className="flex items-center space-x-3 mb-4">
-                <div className="w-12 h-12 bg-gradient-to-br from-purple-500 via-pink-500 to-rose-500 rounded-xl flex items-center justify-center shadow-lg">
-                  <Train className="w-7 h-7 text-white" />
-                </div>
-                <span className="text-xl font-bold bg-gradient-to-r from-purple-400 via-pink-400 to-rose-400 bg-clip-text text-transparent">
-                  RailWay
-                </span>
+              <div className="flex items-center mb-4">
+                <Image src="/logo.png" alt="AliRail" width={120} height={36} className="h-9 w-auto object-contain" />
               </div>
               <p className="text-gray-400 leading-relaxed">
                 Enterprise railway reservation and management platform. 
@@ -560,7 +594,7 @@ export default function HomePage() {
           <div className="border-t border-purple-500/20 pt-8">
             <div className="flex flex-col md:flex-row items-center justify-between gap-4">
               <p className="text-gray-400 text-sm text-center md:text-left">
-                &copy; 2025 RailWay. All rights reserved.
+                &copy; 2025 AliRail. All rights reserved.
               </p>
               <div className="flex items-center gap-2 text-gray-400 text-sm">
                 <span>Developed by</span>

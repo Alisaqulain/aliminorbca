@@ -1,22 +1,27 @@
 'use client'
 
-import { useState, Suspense } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Check, ArrowRight, ArrowLeft, User, Mail, Phone, Calendar, CreditCard, Lock } from 'lucide-react'
+import { Check, ArrowRight, ArrowLeft, User, CreditCard } from 'lucide-react'
 import Navbar from '@/components/Navbar'
 import AIChatAssistant from '@/components/AIChatAssistant'
 import FormInput from '@/components/FormInput'
+import { bookingsApi, trainsApi } from '@/lib/api'
 
 const steps = [
   { id: 1, title: 'Passenger Details', icon: User },
   { id: 2, title: 'Review & Confirm', icon: Check },
-  { id: 3, title: 'Payment', icon: CreditCard },
 ]
 
 function BookingContent() {
   const searchParams = useSearchParams()
   const router = useRouter()
+  const trainId = searchParams.get('trainId')
+  const journeyDate = searchParams.get('date') || new Date().toISOString().slice(0, 10)
+  const classType = searchParams.get('classType') || 'ac3'
+  const passengersCount = Math.min(6, Math.max(1, parseInt(searchParams.get('passengers') || '1', 10)))
+  const [train, setTrain] = useState<{ trainName: string; trainNumber: string; source: string; destination: string; departureTime: string; price: number; pricePerClass?: Record<string, number> } | null>(null)
   const [currentStep, setCurrentStep] = useState(1)
   const [formData, setFormData] = useState({
     name: '',
@@ -27,28 +32,52 @@ function BookingContent() {
     address: '',
   })
   const [errors, setErrors] = useState<{ [key: string]: string }>({})
-  const [paymentMethod, setPaymentMethod] = useState<'card' | 'upi' | 'wallet'>('card')
+  const [submitting, setSubmitting] = useState(false)
 
-  const handleNext = () => {
+  useEffect(() => {
+    if (trainId) {
+      trainsApi.get(trainId).then(({ data }) => data?.train && setTrain(data.train as typeof train))
+    } else {
+      router.replace('/passenger/search')
+    }
+  }, [trainId, router])
+
+  const handleNext = async () => {
     if (currentStep === 1) {
-      // Validate passenger details
       const newErrors: { [key: string]: string } = {}
-      if (!formData.name) newErrors.name = 'Name is required'
+      if (!formData.name.trim()) newErrors.name = 'Name is required'
       if (!formData.age) newErrors.age = 'Age is required'
       if (!formData.gender) newErrors.gender = 'Gender is required'
       if (!formData.email) newErrors.email = 'Email is required'
       if (!formData.phone) newErrors.phone = 'Phone is required'
-      
       if (Object.keys(newErrors).length > 0) {
         setErrors(newErrors)
         return
       }
+      setCurrentStep(2)
+      return
     }
-    if (currentStep < 3) {
-      setCurrentStep(currentStep + 1)
-    } else {
-      // Complete booking
-      router.push('/passenger/history')
+    if (currentStep === 2 && trainId) {
+      setSubmitting(true)
+      const passengerDetails = Array.from({ length: passengersCount }, () => ({
+        name: formData.name,
+        age: parseInt(formData.age, 10) || 25,
+        gender: formData.gender || 'male',
+      }))
+      const { data, error } = await bookingsApi.create({
+        trainId,
+        journeyDate,
+        passengerDetails,
+        classType,
+      })
+      setSubmitting(false)
+      if (error) {
+        setErrors({ form: error })
+        return
+      }
+      if (data?.booking && (data.booking as { _id?: string })._id) {
+        router.push(`/payment?bookingId=${(data.booking as { _id: string })._id}`)
+      }
     }
   }
 
@@ -67,7 +96,7 @@ function BookingContent() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
+    <div className="min-h-screen bg-gradient-to-r from-purple-900 via-purple-950 to-indigo-950">
       <Navbar userType="passenger" />
       <AIChatAssistant />
 
@@ -219,27 +248,27 @@ function BookingContent() {
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <p className="text-sm text-gray-500">Train</p>
-                      <p className="font-semibold">Rajdhani Express (12301)</p>
+                      <p className="font-semibold">{train?.trainName} ({train?.trainNumber})</p>
                     </div>
                     <div>
                       <p className="text-sm text-gray-500">Date</p>
-                      <p className="font-semibold">2024-01-15</p>
+                      <p className="font-semibold">{journeyDate}</p>
                     </div>
                     <div>
                       <p className="text-sm text-gray-500">From</p>
-                      <p className="font-semibold">New Delhi</p>
+                      <p className="font-semibold">{train?.source}</p>
                     </div>
                     <div>
                       <p className="text-sm text-gray-500">To</p>
-                      <p className="font-semibold">Mumbai Central</p>
+                      <p className="font-semibold">{train?.destination}</p>
                     </div>
                     <div>
                       <p className="text-sm text-gray-500">Class</p>
-                      <p className="font-semibold">AC 2 Tier</p>
+                      <p className="font-semibold">{classType.toUpperCase()}</p>
                     </div>
                     <div>
                       <p className="text-sm text-gray-500">Passengers</p>
-                      <p className="font-semibold">1</p>
+                      <p className="font-semibold">{passengersCount}</p>
                     </div>
                   </div>
                 </div>
@@ -257,86 +286,14 @@ function BookingContent() {
 
                 <div className="p-6 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl">
                   <div className="flex items-center justify-between">
-                    <span className="text-xl font-bold text-gray-900">Total Amount</span>
-                    <span className="text-3xl font-bold text-blue-600">₹2,500</span>
+                    <span className="text-xl font-bold text-gray-900">Total Amount (approx)</span>
+                    <span className="text-3xl font-bold text-blue-600">
+                      ₹{train ? (train.pricePerClass?.[classType] ?? train.price) * passengersCount : '—'}
+                    </span>
                   </div>
+                  <p className="text-sm text-gray-500 mt-1">Pay on next step</p>
                 </div>
-              </div>
-            </motion.div>
-          )}
-
-          {currentStep === 3 && (
-            <motion.div
-              key="step3"
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -20 }}
-              className="glass rounded-2xl p-6 sm:p-8"
-            >
-              <h2 className="text-2xl font-bold text-gray-900 mb-6">Payment</h2>
-              <div className="space-y-6">
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-3">
-                    Payment Method
-                  </label>
-                  <div className="grid grid-cols-3 gap-4">
-                    {[
-                      { value: 'card', label: 'Card', icon: CreditCard },
-                      { value: 'upi', label: 'UPI', icon: Phone },
-                      { value: 'wallet', label: 'Wallet', icon: Lock },
-                    ].map((method) => {
-                      const Icon = method.icon
-                      return (
-                        <motion.button
-                          key={method.value}
-                          onClick={() => setPaymentMethod(method.value as any)}
-                          whileHover={{ scale: 1.05 }}
-                          whileTap={{ scale: 0.95 }}
-                          className={`p-4 rounded-xl border-2 transition-all ${
-                            paymentMethod === method.value
-                              ? 'border-blue-500 bg-blue-50'
-                              : 'border-gray-200 hover:border-blue-300'
-                          }`}
-                        >
-                          <Icon className="w-6 h-6 mx-auto mb-2 text-gray-700" />
-                          <p className="font-semibold text-sm">{method.label}</p>
-                        </motion.button>
-                      )
-                    })}
-                  </div>
-                </div>
-
-                {paymentMethod === 'card' && (
-                  <motion.div
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: 'auto' }}
-                    className="space-y-4"
-                  >
-                    <FormInput label="Card Number" name="cardNumber" placeholder="1234 5678 9012 3456" />
-                    <div className="grid grid-cols-2 gap-4">
-                      <FormInput label="Expiry Date" name="expiry" placeholder="MM/YY" />
-                      <FormInput label="CVV" name="cvv" placeholder="123" />
-                    </div>
-                    <FormInput label="Cardholder Name" name="cardName" placeholder="John Doe" />
-                  </motion.div>
-                )}
-
-                {paymentMethod === 'upi' && (
-                  <motion.div
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: 'auto' }}
-                  >
-                    <FormInput label="UPI ID" name="upiId" placeholder="yourname@paytm" />
-                  </motion.div>
-                )}
-
-                <div className="p-6 bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl border-2 border-green-200">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-lg font-bold text-gray-900">Amount to Pay</span>
-                    <span className="text-2xl font-bold text-green-600">₹2,500</span>
-                  </div>
-                  <p className="text-sm text-gray-600">Secure payment powered by encryption</p>
-                </div>
+                {errors.form && <p className="text-red-600 text-sm">{errors.form}</p>}
               </div>
             </motion.div>
           )}
@@ -356,11 +313,12 @@ function BookingContent() {
           </motion.button>
           <motion.button
             onClick={handleNext}
+            disabled={submitting || (currentStep === 2 && !trainId)}
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
-            className="btn-primary flex items-center gap-2"
+            className="btn-primary flex items-center gap-2 disabled:opacity-50"
           >
-            {currentStep === 3 ? 'Complete Booking' : 'Next'}
+            {submitting ? 'Creating booking...' : currentStep === 2 ? 'Confirm & Proceed to Pay' : 'Next'}
             <ArrowRight className="w-5 h-5" />
           </motion.button>
         </div>
@@ -372,7 +330,7 @@ function BookingContent() {
 export default function BookingPage() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-r from-purple-900 via-purple-950 to-indigo-950">
         <div className="w-8 h-8 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
       </div>
     }>

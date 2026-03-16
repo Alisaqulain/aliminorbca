@@ -1,14 +1,18 @@
 'use client'
 
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
-import { Train, User, Mail, Lock, Phone, ArrowRight } from 'lucide-react'
+import Image from 'next/image'
+import { ArrowRight } from 'lucide-react'
 import FormInput from '@/components/FormInput'
+import PublicNavbar from '@/components/PublicNavbar'
+import { useAuth } from '@/contexts/AuthContext'
 
 export default function SignupPage() {
   const router = useRouter()
+  const { signup } = useAuth()
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -32,9 +36,7 @@ export default function SignupPage() {
       newErrors.email = 'Email is invalid'
     }
     
-    if (!formData.phone) {
-      newErrors.phone = 'Phone is required'
-    } else if (!/^\d{10}$/.test(formData.phone)) {
+    if (formData.phone && !/^\d{10}$/.test(formData.phone)) {
       newErrors.phone = 'Phone must be 10 digits'
     }
     
@@ -57,12 +59,20 @@ export default function SignupPage() {
     if (!validate()) return
 
     setIsSubmitting(true)
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1500))
+    setErrors({})
+    const { error } = await signup({
+      name: formData.name,
+      email: formData.email,
+      password: formData.password,
+      phone: formData.phone || undefined,
+    })
     setIsSubmitting(false)
-    
-    // Redirect to dashboard (optional - can be removed)
-    // router.push('/passenger/dashboard')
+    if (error) {
+      setErrors({ form: error })
+      return
+    }
+    // Auto-login: context sets user and redirects; ensure we navigate if needed
+    router.replace('/passenger/dashboard')
   }
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -74,50 +84,35 @@ export default function SignupPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 py-12">
-      <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute -top-40 -right-40 w-80 h-80 bg-blue-400 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob"></div>
-        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-purple-400 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob animation-delay-2000"></div>
-        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-80 h-80 bg-indigo-400 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob animation-delay-4000"></div>
+    <div className="min-h-screen bg-gradient-to-r from-purple-900 via-purple-950 to-indigo-950">
+      <PublicNavbar />
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute -top-40 -right-40 w-96 h-96 bg-purple-500/20 rounded-full blur-3xl animate-blob" />
+        <div className="absolute -bottom-40 -left-40 w-96 h-96 bg-indigo-500/20 rounded-full blur-3xl animate-blob animation-delay-2000" />
       </div>
 
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6 }}
-        className="relative w-full max-w-md"
-      >
-        <div className="glass rounded-3xl shadow-2xl p-8 sm:p-10">
-          {/* Logo */}
-          <motion.div
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            transition={{ delay: 0.2, type: 'spring' }}
-            className="flex justify-center mb-8"
-          >
-            <div className="w-20 h-20 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-2xl flex items-center justify-center shadow-lg">
-              <Train className="w-10 h-10 text-white" />
+      <div className="relative flex items-center justify-center min-h-[calc(100vh-4rem)] px-4 sm:px-6 py-12">
+        <motion.div
+          initial={{ opacity: 0, y: 24 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          className="w-full max-w-md"
+        >
+          <div className="bg-gray-800/90 backdrop-blur-xl rounded-3xl shadow-xl border border-gray-700 p-8 sm:p-10">
+            <div className="flex justify-center mb-6">
+              <Image src="/logo.png" alt="AliRail" width={140} height={48} className="h-11 w-auto object-contain invert" />
             </div>
-          </motion.div>
+            <div className="text-center mb-6">
+              <h1 className="text-2xl sm:text-3xl font-bold text-white mb-1">Create account</h1>
+              <p className="text-gray-400 text-sm">Join AliRail to book trains and manage tickets</p>
+            </div>
 
-          {/* Title */}
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
-            className="text-center mb-8"
-          >
-            <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-2">Create Account</h1>
-            <p className="text-gray-600">Join us and start your journey</p>
-          </motion.div>
-
-          {/* Form */}
-          <form onSubmit={handleSubmit} className="space-y-5">
-            <motion.div
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.4 }}
-            >
+            <form onSubmit={handleSubmit} className="space-y-4">
+              {errors.form && (
+                <div className="rounded-xl bg-red-900/30 border border-red-700 px-4 py-3 text-sm text-red-300">
+                  {errors.form}
+                </div>
+              )}
               <FormInput
                 label="Full Name"
                 type="text"
@@ -128,13 +123,6 @@ export default function SignupPage() {
                 error={errors.name}
                 required
               />
-            </motion.div>
-
-            <motion.div
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.5 }}
-            >
               <FormInput
                 label="Email Address"
                 type="email"
@@ -145,113 +133,61 @@ export default function SignupPage() {
                 error={errors.email}
                 required
               />
-            </motion.div>
-
-            <motion.div
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.6 }}
-            >
               <FormInput
-                label="Phone Number"
+                label="Phone (optional)"
                 type="tel"
                 name="phone"
-                placeholder="1234567890"
+                placeholder="10 digits"
                 value={formData.phone}
                 onChange={handleChange}
                 error={errors.phone}
-                required
               />
-            </motion.div>
-
-            <motion.div
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.7 }}
-            >
               <FormInput
                 label="Password"
                 type="password"
                 name="password"
-                placeholder="Create a password"
+                placeholder="Min 6 characters"
                 value={formData.password}
                 onChange={handleChange}
                 error={errors.password}
                 required
               />
-            </motion.div>
-
-            <motion.div
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.8 }}
-            >
               <FormInput
                 label="Confirm Password"
                 type="password"
                 name="confirmPassword"
-                placeholder="Confirm your password"
+                placeholder="Confirm password"
                 value={formData.confirmPassword}
                 onChange={handleChange}
                 error={errors.confirmPassword}
                 required
               />
-            </motion.div>
-
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.9 }}
-              className="flex items-center"
-            >
-              <input type="checkbox" id="terms" className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500" />
-              <label htmlFor="terms" className="ml-2 text-sm text-gray-600">
-                I agree to the{' '}
-                <Link href="#" className="text-blue-600 hover:text-blue-700 font-semibold">
-                  Terms and Conditions
-                </Link>
+              <label className="flex items-center gap-2 text-sm text-gray-400 cursor-pointer">
+                <input type="checkbox" className="w-4 h-4 text-blue-500 rounded border-gray-600 bg-gray-700 focus:ring-blue-500" />
+                I agree to the <Link href="#" className="text-blue-400 hover:text-blue-300 font-medium">Terms</Link>
               </label>
-            </motion.div>
-
-            <motion.button
-              type="submit"
-              disabled={isSubmitting}
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 1 }}
-              className="w-full btn-primary text-lg py-4 flex items-center justify-center gap-2"
-            >
-              {isSubmitting ? (
-                <>
-                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                  Creating account...
-                </>
-              ) : (
-                <>
-                  Create Account <ArrowRight className="w-5 h-5" />
-                </>
-              )}
-            </motion.button>
-          </form>
-
-          {/* Login Link */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 1.1 }}
-            className="mt-6 text-center"
-          >
-            <p className="text-gray-600">
+              <button
+                type="submit"
+                disabled={isSubmitting}
+                className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold py-3.5 px-4 rounded-xl shadow-lg shadow-blue-500/25 transition-all duration-200 flex items-center justify-center gap-2 disabled:opacity-70"
+              >
+                {isSubmitting ? (
+                  <>
+                    <span className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    Creating account...
+                  </>
+                ) : (
+                  <>Create account <ArrowRight className="w-5 h-5" /></>
+                )}
+              </button>
+            </form>
+            <p className="mt-6 text-center text-sm text-gray-500">
               Already have an account?{' '}
-              <Link href="/login" className="text-blue-600 hover:text-blue-700 font-semibold">
-                Sign in
-              </Link>
+              <Link href="/login" className="text-blue-600 hover:text-blue-700 font-semibold">Sign in</Link>
             </p>
-          </motion.div>
-        </div>
-      </motion.div>
+          </div>
+        </motion.div>
+      </div>
     </div>
   )
 }

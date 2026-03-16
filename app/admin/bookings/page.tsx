@@ -72,12 +72,27 @@ export default function ManageBookingsPage() {
       case 'cancelled':
         return 'bg-red-100 text-red-700'
       default:
-        return 'bg-gray-100 text-gray-700'
+        return 'bg-gray-700 text-gray-300'
     }
   }
 
+  const handleExport = () => {
+    const headers = 'PNR,Passenger,Train,From,To,Date,Status,Amount (₹),Booking Date\n'
+    const rows = filteredBookings.map((b) =>
+      [b.pnr, b.passengerName, `${b.trainName} (${b.trainNumber})`, b.from, b.to, b.date, b.status, b.amount, b.bookingDate].join(',')
+    ).join('\n')
+    const csv = headers + rows
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `bookings-export-${new Date().toISOString().slice(0, 10)}.csv`
+    a.click()
+    URL.revokeObjectURL(url)
+  }
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
+    <div className="min-h-screen bg-gradient-to-r from-purple-900 via-purple-950 to-indigo-950">
       <Navbar userType="admin" />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -89,10 +104,11 @@ export default function ManageBookingsPage() {
         >
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-4xl font-bold text-gray-900 mb-2">Manage Bookings</h1>
-              <p className="text-gray-600">AI-powered booking insights and management</p>
+              <h1 className="text-4xl font-bold text-white mb-2">Manage Bookings</h1>
+              <p className="text-gray-400">AI-powered booking insights and management</p>
             </div>
             <motion.button
+              onClick={handleExport}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               className="btn-secondary flex items-center gap-2"
@@ -127,8 +143,8 @@ export default function ManageBookingsPage() {
               >
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm text-gray-600 mb-1">{stat.label}</p>
-                    <p className="text-2xl font-bold text-gray-900">{stat.value}</p>
+                    <p className="text-sm text-gray-400 mb-1">{stat.label}</p>
+                    <p className="text-2xl font-bold text-white">{stat.value}</p>
                   </div>
                   <div className={`w-12 h-12 bg-gradient-to-br from-${stat.color}-500 to-${stat.color}-600 rounded-xl flex items-center justify-center`}>
                     <Icon className="w-6 h-6 text-white" />
@@ -154,7 +170,7 @@ export default function ManageBookingsPage() {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search by PNR, passenger name, or train..."
-                className="w-full pl-12 pr-4 py-3 rounded-lg border-2 border-gray-300 bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:outline-none"
+                className="w-full pl-12 pr-4 py-3 rounded-lg border-2 border-gray-600 bg-gray-800 text-white placeholder:text-gray-500 focus:border-blue-500 focus:outline-none"
               />
             </div>
             <div className="flex items-center gap-2">
@@ -166,7 +182,7 @@ export default function ManageBookingsPage() {
                   className={`px-4 py-2 rounded-lg font-semibold transition-all capitalize ${
                     statusFilter === status
                       ? 'bg-blue-600 text-white'
-                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                      : 'bg-gray-700 text-gray-300 hover:bg-gray-600 border border-gray-600'
                   }`}
                 >
                   {status}
@@ -209,24 +225,24 @@ export default function ManageBookingsPage() {
                     className="transition-colors"
                   >
                     <td className="px-6 py-4">
-                      <span className="font-mono font-semibold text-gray-900">{booking.pnr}</span>
+                      <span className="font-mono font-semibold text-white">{booking.pnr}</span>
                     </td>
                     <td className="px-6 py-4">
-                      <span className="font-semibold text-gray-900">{booking.passengerName}</span>
+                      <span className="font-semibold text-white">{booking.passengerName}</span>
                     </td>
                     <td className="px-6 py-4">
                       <div className="text-sm">
-                        <p className="font-semibold text-gray-900">{booking.trainName}</p>
+                        <p className="font-semibold text-white">{booking.trainName}</p>
                         <p className="text-gray-500">{booking.trainNumber}</p>
                       </div>
                     </td>
                     <td className="px-6 py-4 text-sm">
-                      <p className="text-gray-900">{booking.from}</p>
+                      <p className="text-white">{booking.from}</p>
                       <p className="text-gray-500">→ {booking.to}</p>
                     </td>
-                    <td className="px-6 py-4 text-sm text-gray-700">{booking.date}</td>
+                    <td className="px-6 py-4 text-sm text-gray-300">{booking.date}</td>
                     <td className="px-6 py-4">
-                      <span className="font-semibold text-gray-900">₹{booking.amount}</span>
+                      <span className="font-semibold text-white">₹{booking.amount}</span>
                     </td>
                     <td className="px-6 py-4">
                       <span className={`px-3 py-1 rounded-full text-xs font-semibold ${getStatusColor(booking.status)}`}>
@@ -236,7 +252,7 @@ export default function ManageBookingsPage() {
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-2">
                         <Sparkles className="w-4 h-4 text-blue-600" />
-                        <span className="text-xs text-gray-600 max-w-[150px] truncate">
+                        <span className="text-xs text-gray-400 max-w-[150px] truncate">
                           {booking.aiInsight}
                         </span>
                       </div>
@@ -275,7 +291,7 @@ export default function ManageBookingsPage() {
             animate={{ opacity: 1 }}
             className="text-center py-12"
           >
-            <p className="text-xl text-gray-600">No bookings found</p>
+            <p className="text-xl text-gray-400">No bookings found</p>
           </motion.div>
         )}
       </div>
